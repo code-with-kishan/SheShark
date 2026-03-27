@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #ff4d94;
+  --color-primary-light: #ffb3d1;
+  --color-primary-dark: #e6005c;
+  --color-accent: #fff0f6;
+  --color-foreground: #1A1A1A;
+  --color-muted: #555555;
+  --color-border: #fce7f3;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-health-pink: #EC4899;
+  --color-violet-accent: #8B5CF6;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-pink-100 shadow-xl;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-900/70 backdrop-blur-md border border-slate-800/20 shadow-xl;
+  }
+
+  .btn-primary {
+    @apply px-8 py-4 bg-primary text-white rounded-full font-semibold transition-all hover:bg-primary-dark hover:scale-105 active:scale-95 shadow-lg shadow-primary/20;
+  }
+
+  .btn-secondary {
+    @apply px-8 py-4 bg-white text-primary border border-primary/20 rounded-full font-semibold transition-all hover:bg-accent hover:scale-105 active:scale-95;
+  }
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-light;
+}
+
+.bg-mesh {
+  background-color: #ffffff;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(330,100%,95%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(330,100%,98%,1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(330,100%,95%,1) 0, transparent 50%);
+}

@@ -1,0 +1,5 @@
+{
+  "name": "SheShark",
+  "description": "A premium SaaS platform for women entrepreneurs in clean energy with AI-powered business and health tools.",
+  "requestFramePermissions": ["geolocation"]
+}
