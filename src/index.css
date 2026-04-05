@@ -17,26 +17,35 @@
 }
 
 @layer base {
+  html, body, #root {
+    min-height: 100%;
+  }
+
   body {
     @apply bg-white text-foreground font-sans antialiased;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
 @layer components {
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-pink-100 shadow-xl;
+    @apply bg-white border border-pink-100 shadow-sm;
   }
   
   .glass-dark {
-    @apply bg-slate-900/70 backdrop-blur-md border border-slate-800/20 shadow-xl;
+    @apply bg-slate-900 border border-slate-800/30 shadow-sm;
   }
 
   .btn-primary {
-    @apply px-8 py-4 bg-primary text-white rounded-full font-semibold transition-all hover:bg-primary-dark hover:scale-105 active:scale-95 shadow-lg shadow-primary/20;
+    @apply px-5 py-3 sm:px-8 sm:py-4 bg-primary text-white rounded-full font-semibold transition-colors hover:bg-primary-dark active:opacity-90 shadow-sm;
   }
 
   .btn-secondary {
-    @apply px-8 py-4 bg-white text-primary border border-primary/20 rounded-full font-semibold transition-all hover:bg-accent hover:scale-105 active:scale-95;
+    @apply px-5 py-3 sm:px-8 sm:py-4 bg-white text-primary border border-primary/20 rounded-full font-semibold transition-colors hover:bg-accent active:opacity-90;
   }
 }
 
@@ -47,7 +56,19 @@
 .bg-mesh {
   background-color: #ffffff;
   background-image: 
-    radial-gradient(at 0% 0%, hsla(330,100%,95%,1) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, hsla(330,100%,98%,1) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, hsla(330,100%,95%,1) 0, transparent 50%);
+    linear-gradient(180deg, #fff7fb 0%, #ffffff 45%, #ffffff 100%);
+}
+
+.app-min-h {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

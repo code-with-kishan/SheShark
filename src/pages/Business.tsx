@@ -1,23 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GlassCard, Button } from '@/components/UI';
-import { Briefcase, Plus, TrendingUp, Package, DollarSign, Settings } from 'lucide-react';
+import { Briefcase, Plus, TrendingUp, Package, DollarSign, Settings, AlertTriangle, BarChart3, Truck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Business = () => {
+  const navigate = useNavigate();
+  const [notice, setNotice] = useState('');
+
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Business</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">My Business</h1>
           <p className="text-slate-500">Manage your products, orders, and growth.</p>
         </div>
-        <Button icon={Plus}>Add New Product</Button>
+        <Button icon={Plus} className="w-full sm:w-auto" onClick={() => navigate('/marketplace')}>Add New Product</Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {notice && <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">{notice}</div>}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         <GlassCard className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-5 sm:mb-8">
             <h3 className="text-xl font-bold">Recent Orders</h3>
-            <Button variant="ghost">View All</Button>
+            <Button variant="ghost" onClick={() => navigate('/marketplace')}>View All</Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -64,7 +70,7 @@ const Business = () => {
               <TrendingUp size={20} />
             </div>
             <div className="text-sm font-medium opacity-80">Monthly Revenue</div>
-            <div className="text-3xl font-bold mt-1">$4,850.00</div>
+            <div className="text-2xl sm:text-3xl font-bold mt-1">$4,850.00</div>
             <div className="mt-4 text-xs font-bold bg-white/20 inline-block px-2 py-1 rounded">
               +15% from last month
             </div>
@@ -96,7 +102,78 @@ const Business = () => {
               </div>
             </div>
           </GlassCard>
+
+          <GlassCard>
+            <h3 className="font-bold mb-4">Quick Tools</h3>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => navigate('/funding')}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-left hover:bg-slate-50"
+              >
+                <BarChart3 size={16} className="inline mr-2 text-primary" /> Open Funding Insights
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/services')}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-left hover:bg-slate-50"
+              >
+                <Briefcase size={16} className="inline mr-2 text-primary" /> Manage Service Listings
+              </button>
+              <button
+                type="button"
+                onClick={() => setNotice('Logistics module opened in demo mode.')}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-left hover:bg-slate-50"
+              >
+                <Truck size={16} className="inline mr-2 text-primary" /> Track Deliveries
+              </button>
+            </div>
+          </GlassCard>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <GlassCard>
+          <h3 className="text-xl font-bold mb-4">Inventory Alerts</h3>
+          <div className="space-y-3">
+            {[
+              { name: 'Solar Kit X1', qty: 4, severity: 'high' },
+              { name: 'Battery Pack 48V', qty: 9, severity: 'medium' },
+              { name: 'Inverter Pro', qty: 12, severity: 'low' },
+            ].map((item) => (
+              <div key={item.name} className="flex items-center justify-between rounded-2xl border border-slate-100 p-3">
+                <div>
+                  <p className="font-semibold text-slate-800">{item.name}</p>
+                  <p className="text-xs text-slate-500">Available: {item.qty}</p>
+                </div>
+                <span className={item.severity === 'high' ? 'text-xs font-bold text-red-600' : item.severity === 'medium' ? 'text-xs font-bold text-amber-600' : 'text-xs font-bold text-green-600'}>
+                  <AlertTriangle size={14} className="inline mr-1" /> {item.severity}
+                </span>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <h3 className="text-xl font-bold mb-4">Top Products</h3>
+          <div className="space-y-3">
+            {[
+              { name: 'Solar Kit', sales: 124, revenue: '₹2,40,000' },
+              { name: 'Battery Pack', sales: 96, revenue: '₹1,72,000' },
+              { name: 'Inverter Pro', sales: 74, revenue: '₹1,38,000' },
+            ].map((item) => (
+              <button
+                type="button"
+                key={item.name}
+                onClick={() => navigate('/marketplace')}
+                className="w-full rounded-2xl border border-slate-100 p-3 text-left hover:bg-slate-50"
+              >
+                <p className="font-semibold text-slate-800">{item.name}</p>
+                <p className="text-xs text-slate-500 mt-1">Sales: {item.sales} • Revenue: {item.revenue}</p>
+              </button>
+            ))}
+          </div>
+        </GlassCard>
       </div>
     </div>
   );

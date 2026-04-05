@@ -1,175 +1,190 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Upload, Search, Box } from 'lucide-react';
 import { GlassCard, Button } from '@/components/UI';
-import { ShoppingBag, Search, Filter, Star, Heart, Plus } from 'lucide-react';
+import ProductCard from '@/components/Marketplace/ProductCard';
+import ModelViewer from '@/components/Marketplace/ModelViewer';
+import { marketplaceService } from '@/services/api';
 import { useStore } from '@/store/useStore';
+import { useI18n } from '@/lib/i18n';
+import { Link, useNavigate } from 'react-router-dom';
 
-const products = [
-  {
-    "id": "inv-1",
-    "name": "Microtek Heavy Duty 2350 Pure Sine Wave 2000VA/24V Inverter",
-    "category": "Solar Inverter",
-    "brand": "Microtek",
-    "price": 11800,
-    "image": "https://m.media-amazon.com/images/I/31MsUvPF-CS._AC_UY436_FMwebp_QL65_.jpg",
-    "rating": 4.8,
-    "description": "2000VA pure sine wave inverter supporting dual batteries. Ideal for homes, offices and shops with digital display and 2-year warranty."
-  },
-  {
-    "id": "inv-2",
-    "name": "Solarverter PUC PRO 3KVA/36V Hybrid Solar Inverter",
-    "category": "Solar Inverter",
-    "brand": "Generic",
-    "price": 29999,
-    "image": "https://m.media-amazon.com/images/I/61+syISwrCL._SL1210_.jpg",
-    "rating": 4.7,
-    "description": "Hybrid MPPT solar inverter with smart energy management and high efficiency solar priority charging."
-  },
-  {
-    "id": "inv-3",
-    "name": "UTL Sun Lion 1000 rMPPT Solar Inverter with Lithium Battery",
-    "category": "Solar Inverter",
-    "brand": "UTL",
-    "price": 22000,
-    "image": "https://m.media-amazon.com/images/I/61QBVAtqsLL._SL1500_.jpg",
-    "rating": 4.9,
-    "description": "800VA inverter with inbuilt LiFePO4 battery, rMPPT technology and wall-mountable compact design."
-  },
-  {
-    "id": "bat-1",
-    "name": "Exide INVA Master IMTT1500 150Ah Tall Tubular Battery",
-    "category": "Solar Battery",
-    "brand": "Exide",
-    "price": 14102,
-    "image": "https://m.media-amazon.com/images/I/51KXnETjtgL._SX679_.jpg",
-    "rating": 4.8,
-    "description": "150Ah tall tubular inverter battery offering long backup, low maintenance and 60-month warranty."
-  },
-  {
-    "id": "light-1",
-    "name": "Epyz 200W Solar Flood Light Outdoor Waterproof",
-    "category": "Solar Lighting",
-    "brand": "Epyz",
-    "price": 4400,
-    "image": "https://m.media-amazon.com/images/I/71vlWKh6ayL._SX679_.jpg",
-    "rating": 4.6,
-    "description": "200W solar flood light with 571 LEDs, remote control, IP65 waterproof design and 10–12 hour illumination."
-  },
-  {
-    "id": "acc-1",
-    "name": "ASHAPOWER NEON 70A Solar MPPT Charge Controller",
-    "category": "Solar Accessories",
-    "brand": "ASHAPOWER",
-    "price": 13237,
-    "image": "https://m.media-amazon.com/images/I/61DEHk1q4EL._SL1500_.jpg",
-    "rating": 4.7,
-    "description": "70A MPPT solar charge controller supporting 12V–48V battery banks with ultra-fast power tracking."
-  }
-];
-
-const womenBrands = [
-  {
-    "id": "b1",
-    "name": "Nykaa",
-    "category": "Beauty",
-    "url": "https://www.nykaa.com",
-    "image": "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQFjYOV6Mu2wL1JmYP0VpTMvVPveKlRpdn2Y-OniAU0C6JEBKYKIOXNX2spcmYZ"
-  }
-];
+type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  images: string[];
+  modelUrl?: string;
+  brand?: string;
+  rating: number;
+  reviews: any[];
+  inStock: boolean;
+  seller: {
+    id: string;
+    name: string;
+  };
+};
 
 const Marketplace = () => {
-  const { addToCart } = useStore();
+  const { t } = useI18n();
+  const { user, addToCart } = useStore();
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [selectedModel, setSelectedModel] = useState<{ url: string; title: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const fetchProducts = async (query?: string) => {
+    try {
+      const response = await marketplaceService.getProducts(undefined, undefined, query || undefined);
+      setProducts(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    marketplaceService.getAllBrands()
+      .then((response) => setBrands(response.data || []))
+      .catch((error) => console.error('Failed to fetch brands:', error));
+  }, []);
+
+  const shownProducts = useMemo(() => {
+    if (!search.trim()) {
+      return products;
+    }
+    const q = search.trim().toLowerCase();
+    return products.filter((p) =>
+      [p.name, p.description, p.brand, p.seller?.name]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(q))
+    );
+  }, [products, search]);
+
+  const handleUpload = async (file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith('.glb')) {
+      setUploadError('Only .glb files are supported.');
+      return;
+    }
+
+    setUploadError('');
+    setUploading(true);
+
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      await marketplaceService.uploadModelBase64(file.name, base64);
+      await fetchProducts();
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setUploadError('Failed to upload model. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAddToCart = (product: Product) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    addToCart(product);
+  };
 
   return (
-    <div className="space-y-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Marketplace</h1>
-          <p className="text-slate-500">Discover premium solar products and women-led brands.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('marketplace.title')}</h1>
+          <p className="text-slate-500">Browse products with 3D model previews.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search products..." 
-              className="glass pl-12 pr-6 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 w-64"
+        <div className="flex items-center gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <Upload size={16} />
+            {uploading ? 'Uploading...' : t('marketplace.upload')}
+            <input
+              type="file"
+              accept=".glb,model/gltf-binary"
+              className="hidden"
+              onChange={(e) => handleUpload(e.target.files?.[0] || null)}
+              disabled={uploading}
             />
-          </div>
-          <Button variant="secondary" icon={Filter}>Filters</Button>
+          </label>
         </div>
       </div>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <ShoppingBag className="text-primary" /> Solar Equipment
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <GlassCard key={product.id} className="p-0 overflow-hidden group flex flex-col">
-              <div className="relative h-56 overflow-hidden bg-white">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                />
-                <button className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md rounded-full text-slate-400 hover:text-primary transition-colors">
-                  <Heart size={20} />
-                </button>
-                <div className="absolute bottom-4 left-4 px-3 py-1 bg-primary text-white text-xs font-bold rounded-full">
-                  {product.category}
-                </div>
-              </div>
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="flex items-start justify-between mb-2 gap-2">
-                  <h3 className="text-lg font-bold leading-tight">{product.name}</h3>
-                  <div className="flex items-center gap-1 text-yellow-500 font-bold shrink-0">
-                    <Star size={16} fill="currentColor" />
-                    {product.rating}
-                  </div>
-                </div>
-                <p className="text-sm text-slate-500 line-clamp-2 mb-4">{product.description}</p>
-                <div className="flex items-center justify-between mt-auto">
-                  <div className="text-2xl font-bold text-primary">₹{product.price.toLocaleString()}</div>
-                  <Button 
-                    onClick={() => addToCart(product)}
-                    className="rounded-xl p-3"
-                  >
-                    <Plus size={20} />
-                  </Button>
-                </div>
-              </div>
-            </GlassCard>
+      <GlassCard className="p-4">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, brand, or description"
+            className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+      </GlassCard>
+
+      {uploadError && (
+        <GlassCard className="border border-red-200 bg-red-50 text-sm text-red-700">{uploadError}</GlassCard>
+      )}
+
+      {shownProducts.length === 0 ? (
+        <GlassCard className="p-10 text-center text-slate-500">
+          <Box className="mx-auto mb-3" />
+          No products found.
+        </GlassCard>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {shownProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={handleAddToCart}
+              onView3D={(url) => setSelectedModel({ url, title: product.name })}
+            />
           ))}
         </div>
-      </section>
+      )}
 
-      <section>
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Heart className="text-health-pink" /> Women-Led Brands
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {womenBrands.map((brand) => (
-            <a 
-              key={brand.id} 
-              href={brand.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="glass p-6 rounded-3xl flex flex-col items-center gap-4 hover:scale-105 transition-transform group"
+      <ModelViewer
+        isOpen={Boolean(selectedModel)}
+        modelUrl={selectedModel?.url || ''}
+        title={selectedModel?.title}
+        onClose={() => setSelectedModel(null)}
+      />
+
+      <div className="flex justify-end">
+        <Button variant="secondary" onClick={() => fetchProducts(search)}>Refresh Products</Button>
+      </div>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold">Collaborated Brands</h2>
+          <p className="text-slate-500">Open a brand page to explore its products and flow.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
+          {brands.map((brand) => (
+            <Link
+              key={brand.id}
+              to={`/brands/${encodeURIComponent(brand.name)}`}
+              className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md"
             >
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white flex items-center justify-center p-2">
-                <img 
-                  src={brand.image} 
-                  alt={brand.name} 
-                  className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="text-center">
-                <div className="font-bold group-hover:text-primary transition-colors">{brand.name}</div>
-                <div className="text-xs text-slate-400">{brand.category}</div>
-              </div>
-            </a>
+              <div className="text-sm font-semibold text-slate-800">{brand.name}</div>
+              <div className="mt-1 text-xs text-slate-500">{brand.description}</div>
+            </Link>
           ))}
         </div>
       </section>

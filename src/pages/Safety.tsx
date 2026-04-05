@@ -1,84 +1,175 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GlassCard, Button } from '@/components/UI';
-import { ShieldAlert, Phone, MapPin, Info, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, MapPin, ShieldAlert } from 'lucide-react';
+import PanicButton from '@/components/Safety/PanicButton';
+import { safetyService } from '@/services/api';
+import { useStore } from '@/store/useStore';
+import { useI18n } from '@/lib/i18n';
+
+type SafetyReport = {
+  id: string;
+  type: string;
+  description: string;
+  status: string;
+  isAnonymous: boolean;
+  createdAt: string;
+};
 
 const Safety = () => {
+  const { user, role } = useStore();
+  const { t } = useI18n();
+  const [issueType, setIssueType] = useState('harassment');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState({ lat: 0, lng: 0, address: '' });
+  const [reportMessage, setReportMessage] = useState('');
+  const [routeFrom, setRouteFrom] = useState('');
+  const [routeTo, setRouteTo] = useState('');
+  const [routeSuggestion, setRouteSuggestion] = useState<any>(null);
+  const [adminReports, setAdminReports] = useState<SafetyReport[]>([]);
+
+  useEffect(() => {
+    if (!user || role !== 'business') {
+      return;
+    }
+
+    safetyService.getSafetyReportsAdmin()
+      .then((response) => setAdminReports(response.data || []))
+      .catch((error) => {
+        console.error('Failed to load admin reports:', error);
+      });
+  }, [role, user]);
+
+  const submitAnonymousReport = async () => {
+    if (!description.trim()) {
+      setReportMessage('Please describe the incident.');
+      return;
+    }
+
+    try {
+      await safetyService.reportSafetyIssuePublic(issueType, description, location, []);
+      setDescription('');
+      setReportMessage('Anonymous report submitted successfully.');
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      setReportMessage('Failed to submit anonymous report. Please retry. If you are logged out, this action still works as public report.');
+    }
+  };
+
+  const fetchSaferRoute = async () => {
+    if (!routeFrom.trim() || !routeTo.trim()) {
+      return;
+    }
+
+    try {
+      const response = await safetyService.suggestSaferRoute(routeFrom, routeTo);
+      setRouteSuggestion(response.data);
+    } catch (error) {
+      console.error('Failed to get route suggestion:', error);
+      setRouteSuggestion(null);
+      setReportMessage('Could not fetch safer route right now. Please try again.');
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="text-center space-y-4">
-        <div className="w-24 h-24 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-red-500/20">
-          <ShieldAlert size={48} />
+    <div className="mx-auto max-w-5xl space-y-8 pb-24">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold">{t('safety.title')}</h1>
+        <p className="mt-2 text-slate-500">Emergency tools, anonymous reporting, and safer-route guidance.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <GlassCard className="space-y-4">
+          <div className="flex items-center gap-2 text-red-600">
+            <ShieldAlert size={20} />
+            <h2 className="text-xl font-bold">Emergency</h2>
+          </div>
+          <p className="text-sm text-slate-600">Use the floating panic button to send your live location, notify contacts, and find nearby police stations.</p>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li>Location capture enabled</li>
+            <li>Emergency contact notifications tracked</li>
+            <li>Nearest police stations fetched</li>
+          </ul>
+        </GlassCard>
+
+        <GlassCard className="space-y-4">
+          <div className="flex items-center gap-2 text-orange-600">
+            <AlertTriangle size={20} />
+            <h2 className="text-xl font-bold">{t('safety.report')}</h2>
+          </div>
+          <select
+            value={issueType}
+            onChange={(e) => setIssueType(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          >
+            <option value="harassment">Harassment</option>
+            <option value="threat">Threat</option>
+            <option value="unsafe_location">Unsafe Location</option>
+            <option value="other">Other</option>
+          </select>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe what happened (personal details are automatically masked)."
+            rows={4}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+          <input
+            value={location.address}
+            onChange={(e) => setLocation((prev) => ({ ...prev, address: e.target.value }))}
+            placeholder="Location (optional)"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+          <Button onClick={submitAnonymousReport}>Submit Anonymous Report</Button>
+          {reportMessage && <p className="text-sm text-slate-600">{reportMessage}</p>}
+        </GlassCard>
+      </div>
+
+      <GlassCard className="space-y-4">
+        <div className="flex items-center gap-2 text-primary">
+          <MapPin size={20} />
+          <h2 className="text-xl font-bold">Safer Route Suggestion</h2>
         </div>
-        <h1 className="text-4xl font-bold">Safety Module</h1>
-        <p className="text-slate-500 max-w-lg mx-auto">Your safety is our priority. Use these tools in case of emergency or for peace of mind while working.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* SOS Button */}
-        <GlassCard className="border-red-100 bg-red-50/30 flex flex-col items-center text-center p-12">
-          <h3 className="text-2xl font-bold text-red-600 mb-4">Emergency SOS</h3>
-          <p className="text-red-500/70 text-sm mb-8">Pressing this will instantly notify your emergency contacts and local authorities with your current location.</p>
-          <button className="w-40 h-40 bg-red-500 text-white rounded-full flex items-center justify-center shadow-2xl shadow-red-500/40 hover:scale-110 active:scale-95 transition-all font-bold text-2xl">
-            SOS
-          </button>
-        </GlassCard>
-
-        {/* Emergency Contacts */}
-        <GlassCard className="space-y-6">
-          <h3 className="text-xl font-bold">Emergency Contacts</h3>
-          <div className="space-y-4">
-            {[
-              { name: 'Police', number: '911', icon: Phone },
-              { name: 'Ambulance', number: '911', icon: Phone },
-              { name: 'Women Helpline', number: '1091', icon: Phone },
-            ].map((contact, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-slate-100 rounded-xl text-slate-600">
-                    <contact.icon size={20} />
-                  </div>
-                  <div className="font-bold">{contact.name}</div>
-                </div>
-                <a href={`tel:${contact.number}`} className="text-primary font-bold text-lg">{contact.number}</a>
-              </div>
-            ))}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <input
+            value={routeFrom}
+            onChange={(e) => setRouteFrom(e.target.value)}
+            placeholder="From"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+          <input
+            value={routeTo}
+            onChange={(e) => setRouteTo(e.target.value)}
+            placeholder="To"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+          <Button onClick={fetchSaferRoute}>Get Safer Route</Button>
+        </div>
+        {routeSuggestion?.recommended && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+            Recommended: {routeSuggestion.recommended.label} ({routeSuggestion.recommended.averageSafetyScore.toFixed(1)} / 5)
           </div>
-          <Button variant="secondary" className="w-full">Edit Personal Contacts</Button>
-        </GlassCard>
-      </div>
-
-      {/* Safety Tips */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <GlassCard className="flex items-start gap-4">
-          <MapPin className="text-primary shrink-0" size={24} />
-          <div>
-            <h4 className="font-bold mb-1">Live Location</h4>
-            <p className="text-xs text-slate-500">Share your real-time location with trusted contacts.</p>
-          </div>
-        </GlassCard>
-        <GlassCard className="flex items-start gap-4">
-          <ShieldCheck className="text-green-500 shrink-0" size={24} />
-          <div>
-            <h4 className="font-bold mb-1">Verified Rides</h4>
-            <p className="text-xs text-slate-500">All SheShark taxi drivers are background checked.</p>
-          </div>
-        </GlassCard>
-        <GlassCard className="flex items-start gap-4">
-          <AlertTriangle className="text-yellow-500 shrink-0" size={24} />
-          <div>
-            <h4 className="font-bold mb-1">Legal Support</h4>
-            <p className="text-xs text-slate-500">Access free legal advice for women entrepreneurs.</p>
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Disclaimer */}
-      <GlassCard className="bg-slate-900 text-white/70 text-xs p-6 flex gap-4 items-start">
-        <Info size={20} className="text-primary shrink-0" />
-        <p>
-          LEGAL DISCLAIMER: The SOS feature is a support tool and should not be relied upon as the sole means of emergency communication. SheShark is not responsible for the response time of local authorities. Always prioritize your immediate physical safety.
-        </p>
+        )}
       </GlassCard>
+
+      {role === 'business' && (
+        <GlassCard className="space-y-4">
+          <h2 className="text-xl font-bold">Admin Reports View</h2>
+          {adminReports.length === 0 ? (
+            <p className="text-sm text-slate-500">No reports yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {adminReports.slice(0, 10).map((report) => (
+                <div key={report.id} className="rounded-xl border border-slate-200 p-3 text-sm">
+                  <div className="font-semibold">{report.type} • {report.status}</div>
+                  <div className="text-slate-600">{report.description}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassCard>
+      )}
+
+      <PanicButton />
     </div>
   );
 };

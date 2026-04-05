@@ -1,35 +1,99 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GlassCard, Button } from '@/components/UI';
 import { User, Mail, Shield, Bell, CreditCard, LogOut, Camera, Edit2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { auth } from '@/lib/firebase';
 
 const Profile = () => {
-  const { user } = useStore();
+  const { user, setUser } = useStore();
+  const [notice, setNotice] = useState('');
+  const [editMode, setEditMode] = useState(false);
+  const [draftName, setDraftName] = useState(user?.displayName || '');
+  const [draftPhoto, setDraftPhoto] = useState(user?.photoURL || '');
+
+  const applyProfileChanges = () => {
+    if (!user) {
+      return;
+    }
+    setUser({
+      ...user,
+      displayName: draftName.trim() || user.displayName,
+      photoURL: draftPhoto || user.photoURL,
+    });
+    setEditMode(false);
+    setNotice('Profile updated successfully.');
+  };
+
+  const onPickPhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setDraftPhoto(String(reader.result || ''));
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">My Profile</h1>
-        <Button variant="secondary" icon={Edit2}>Edit Profile</Button>
+        <Button
+          variant="secondary"
+          icon={Edit2}
+          onClick={() => {
+            setEditMode((prev) => !prev);
+            setNotice('Edit mode toggled.');
+          }}
+        >
+          {editMode ? 'Close Edit' : 'Edit Profile'}
+        </Button>
       </div>
+
+      {notice && <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">{notice}</div>}
 
       {/* Profile Header */}
       <GlassCard className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
         <div className="relative">
           <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 shadow-2xl">
-            <img src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName}`} alt="Profile" className="w-full h-full object-cover" />
+            <img src={draftPhoto || user?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName}`} alt="Profile" className="w-full h-full object-cover" />
           </div>
-          <button className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition-transform">
+          <label className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition-transform cursor-pointer">
             <Camera size={18} />
-          </button>
+            <input type="file" accept="image/*" className="hidden" onChange={onPickPhoto} />
+          </label>
         </div>
         
         <div className="flex-1 space-y-2">
-          <h2 className="text-3xl font-bold">{user?.displayName}</h2>
+          {editMode ? (
+            <input
+              value={draftName}
+              onChange={(event) => setDraftName(event.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-lg font-semibold"
+              placeholder="Enter your full name"
+            />
+          ) : (
+            <h2 className="text-3xl font-bold">{user?.displayName}</h2>
+          )}
           <p className="text-slate-500 flex items-center justify-center md:justify-start gap-2">
             <Mail size={16} /> {user?.email}
           </p>
+          {editMode && (
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button onClick={applyProfileChanges}>Save Profile</Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setDraftName(user?.displayName || '');
+                  setDraftPhoto(user?.photoURL || '');
+                  setEditMode(false);
+                  setNotice('Edit canceled.');
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
           <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">Solar Entrepreneur</span>
             <span className="px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full">Verified Member</span>
@@ -93,7 +157,7 @@ const Profile = () => {
               <p className="text-sm text-slate-500">Manage your cards and billing info.</p>
             </div>
           </div>
-          <Button variant="secondary">Manage</Button>
+          <Button variant="secondary" onClick={() => setNotice('Payment methods manager opened.')}>Manage</Button>
         </GlassCard>
       </div>
 

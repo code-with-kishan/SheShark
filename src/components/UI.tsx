@@ -1,23 +1,17 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   delay?: number;
 }
 
-export const GlassCard: React.FC<CardProps> = ({ children, className, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay }}
-    className={cn("glass rounded-3xl p-6", className)}
-  >
+export const GlassCard: React.FC<CardProps> = ({ children, className, delay = 0, ...props }) => (
+  <div className={cn("glass rounded-2xl sm:rounded-3xl p-4 sm:p-6", className)} {...props}>
     {children}
-  </motion.div>
+  </div>
 );
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
