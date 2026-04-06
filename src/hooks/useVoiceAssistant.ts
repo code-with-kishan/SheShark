@@ -305,6 +305,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
   const processedTranscriptRef = useRef('');
   const hasFinalResultRef = useRef(false);
   const hasRetriedRef = useRef(false);
+  const autoSubmitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isSupported, setIsSupported] = useState(true);
   const [isListening, setIsListening] = useState(false);
@@ -423,6 +424,10 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
         latestTranscriptRef.current = '';
         processedTranscriptRef.current = '';
         hasFinalResultRef.current = false;
+        if (autoSubmitTimerRef.current) {
+          clearTimeout(autoSubmitTimerRef.current);
+          autoSubmitTimerRef.current = null;
+        }
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -443,6 +448,19 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
         const combinedTranscript = (finalTranscript || interimTranscript).trim();
         if (combinedTranscript) {
           setTranscript(combinedTranscript);
+
+          if (autoSubmitTimerRef.current) {
+            clearTimeout(autoSubmitTimerRef.current);
+          }
+
+          autoSubmitTimerRef.current = setTimeout(() => {
+            const latestTranscript = latestTranscriptRef.current.trim();
+            if (latestTranscript && processedTranscriptRef.current !== latestTranscript) {
+              processedTranscriptRef.current = latestTranscript;
+              processTranscript(latestTranscript);
+              recognition.stop();
+            }
+          }, 450);
         }
 
         if (finalTranscript.trim()) {
@@ -453,6 +471,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
           if (processedTranscriptRef.current !== recognized) {
             processedTranscriptRef.current = recognized;
             processTranscript(recognized);
+            recognition.stop();
           }
         }
       };
@@ -470,6 +489,11 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
         setIsListening(false);
         setIsProcessing(false);
         recognitionRef.current = null;
+
+        if (autoSubmitTimerRef.current) {
+          clearTimeout(autoSubmitTimerRef.current);
+          autoSubmitTimerRef.current = null;
+        }
 
         const transcriptToProcess = latestTranscriptRef.current.trim();
         if (transcriptToProcess && processedTranscriptRef.current !== transcriptToProcess) {
@@ -506,6 +530,10 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
     setTranscript('');
     latestTranscriptRef.current = '';
     processedTranscriptRef.current = '';
+    if (autoSubmitTimerRef.current) {
+      clearTimeout(autoSubmitTimerRef.current);
+      autoSubmitTimerRef.current = null;
+    }
   }, []);
 
   const clearResponse = useCallback(() => {

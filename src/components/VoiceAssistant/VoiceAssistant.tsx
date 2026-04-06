@@ -122,14 +122,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommandExecute
         </button>
       </div>
 
-      {/* Command Processing */}
-      <button
-        onClick={() => voiceAssistant.processTranscript(voiceAssistant.transcript)}
-        disabled={!voiceAssistant.transcript || voiceAssistant.isProcessing}
-        className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition mb-4"
-      >
-        {voiceAssistant.isProcessing ? 'Processing...' : 'Execute Command'}
-      </button>
+      <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        Voice commands auto-submit after you finish speaking.
+      </div>
 
       {/* Voice Feedback */}
       <button
