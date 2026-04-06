@@ -18,7 +18,6 @@ export default defineConfig(({mode}) => {
     build: {
       outDir: 'dist',
       sourcemap: mode === 'production' ? false : true,
-      minify: 'terser',
       target: 'esnext',
       rollupOptions: {
         output: {
