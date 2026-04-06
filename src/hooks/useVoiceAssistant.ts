@@ -354,6 +354,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
   const processedTranscriptRef = useRef('');
   const hasFinalResultRef = useRef(false);
   const hasRetriedRef = useRef(false);
+  const hasSpeechPrimedRef = useRef(false);
   const autoSubmitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isSupported, setIsSupported] = useState(true);
@@ -395,6 +396,26 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
 
   const currentLanguage: VoiceLanguage = languageMode === 'auto' ? detectedLanguage : languageMode;
 
+  const primeSpeechSynthesis = useCallback(() => {
+    if (!canSpeak || typeof window === 'undefined' || hasSpeechPrimedRef.current) {
+      return;
+    }
+
+    try {
+      const warmup = new SpeechSynthesisUtterance('.');
+      warmup.volume = 0;
+      warmup.rate = 1;
+      warmup.pitch = 1;
+      warmup.lang = recognitionLanguageMap[currentLanguage];
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(warmup);
+      window.speechSynthesis.cancel();
+      hasSpeechPrimedRef.current = true;
+    } catch (err) {
+      console.error('Speech warm-up failed:', err);
+    }
+  }, [canSpeak, currentLanguage]);
+
   const speak = useCallback((message: string, languageOverride?: VoiceLanguage) => {
     if (!canSpeak || typeof window === 'undefined') {
       return;
@@ -403,7 +424,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
     const selectedLanguage = languageOverride || currentLanguage;
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.lang = recognitionLanguageMap[selectedLanguage];
-    utterance.rate = 1;
+    utterance.rate = selectedLanguage === 'hi' ? 0.92 : 1;
     utterance.pitch = 1;
 
     const chosenVoice = pickVoiceForLanguage(selectedLanguage);
@@ -412,7 +433,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
     }
 
     // Safari/Chrome sometimes load voices lazily; retry once if needed.
-    if (!chosenVoice && typeof window.speechSynthesis.onvoiceschanged !== 'function') {
+    if (!chosenVoice) {
       window.speechSynthesis.onvoiceschanged = () => {
         const retryVoice = pickVoiceForLanguage(selectedLanguage);
         if (retryVoice) {
@@ -421,8 +442,14 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
       };
     }
 
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    const play = () => {
+      window.speechSynthesis.resume();
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    };
+
+    // Delay slightly to avoid mobile conflict between microphone session and TTS output.
+    window.setTimeout(play, 140);
   }, [canSpeak, currentLanguage, pickVoiceForLanguage]);
 
   const processTranscript = useCallback((value: string) => {
@@ -548,8 +575,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
           autoSubmitTimerRef.current = setTimeout(() => {
             const latestTranscript = latestTranscriptRef.current.trim();
             if (latestTranscript && processedTranscriptRef.current !== latestTranscript) {
-              processedTranscriptRef.current = latestTranscript;
-              processTranscript(latestTranscript);
+              // Let onend handle processing so TTS starts after recognition fully closes.
               recognition.stop();
             }
           }, 450);
@@ -559,12 +585,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
           hasFinalResultRef.current = true;
           const recognized = finalTranscript.trim();
           latestTranscriptRef.current = recognized;
-
-          if (processedTranscriptRef.current !== recognized) {
-            processedTranscriptRef.current = recognized;
-            processTranscript(recognized);
-            recognition.stop();
-          }
+          recognition.stop();
         }
       };
 
@@ -615,8 +636,9 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
       return;
     }
 
+    primeSpeechSynthesis();
     startListening();
-  }, [isListening, startListening, stopListening]);
+  }, [isListening, primeSpeechSynthesis, startListening, stopListening]);
 
   const clearTranscript = useCallback(() => {
     setTranscript('');
