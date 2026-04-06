@@ -410,7 +410,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               {voiceEnabled ? <Mic size={16} /> : <MicOff size={16} />}
             </button>
             <button
-              onClick={() => setIsVoicePanelOpen((open) => !open)}
+              onClick={() => setIsVoicePanelOpen(!isVoicePanelOpen)}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition-all',
                 isVoicePanelOpen
