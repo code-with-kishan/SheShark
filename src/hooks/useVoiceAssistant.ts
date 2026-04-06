@@ -67,7 +67,7 @@ const conversationPatterns = [
   {
     response: {
       en: 'To use SheShark, start from the dashboard or voice assistant, then open Marketplace, Safety, Community, Services, or AI Assistant as needed. You can also say commands like "Open marketplace" or "Open safety section".',
-      hi: 'SheShark use karne ke liye dashboard ya voice assistant se start karein. Phir Marketplace, Safety, Community, Services ya AI Assistant khol sakte hain. Aap "marketplace kholo" ya "safety section kholo" jaise commands bhi bol sakte hain.',
+      hi: 'SheShark उपयोग करने के लिए डैशबोर्ड या वॉइस असिस्टेंट से शुरू करें। फिर Marketplace, Safety, Community, Services या AI Assistant खोल सकते हैं। आप "मार्केटप्लेस खोलो" या "सेफ्टी सेक्शन खोलो" जैसे कमांड भी बोल सकते हैं।',
     },
     keywords: [
       'how to use',
@@ -365,6 +365,30 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
   const [languageMode, setLanguageMode] = useState<VoiceLanguageMode>(initialLanguageMode);
   const [detectedLanguage, setDetectedLanguage] = useState<VoiceLanguage>(getBrowserLanguage());
 
+  const pickVoiceForLanguage = useCallback((language: VoiceLanguage) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return null;
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) {
+      return null;
+    }
+
+    const targetPrefix = language === 'hi' ? 'hi' : 'en';
+    const exact = voices.find((voice) => voice.lang?.toLowerCase() === `${targetPrefix}-in`);
+    if (exact) {
+      return exact;
+    }
+
+    const regional = voices.find((voice) => voice.lang?.toLowerCase().startsWith(targetPrefix));
+    if (regional) {
+      return regional;
+    }
+
+    return voices.find((voice) => voice.default) || voices[0];
+  }, []);
+
   const canSpeak = useMemo(() => {
     return speechEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window;
   }, [speechEnabled]);
@@ -376,13 +400,30 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
       return;
     }
 
+    const selectedLanguage = languageOverride || currentLanguage;
     const utterance = new SpeechSynthesisUtterance(message);
-    utterance.lang = recognitionLanguageMap[languageOverride || currentLanguage];
+    utterance.lang = recognitionLanguageMap[selectedLanguage];
     utterance.rate = 1;
     utterance.pitch = 1;
+
+    const chosenVoice = pickVoiceForLanguage(selectedLanguage);
+    if (chosenVoice) {
+      utterance.voice = chosenVoice;
+    }
+
+    // Safari/Chrome sometimes load voices lazily; retry once if needed.
+    if (!chosenVoice && typeof window.speechSynthesis.onvoiceschanged !== 'function') {
+      window.speechSynthesis.onvoiceschanged = () => {
+        const retryVoice = pickVoiceForLanguage(selectedLanguage);
+        if (retryVoice) {
+          utterance.voice = retryVoice;
+        }
+      };
+    }
+
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
-  }, [canSpeak, currentLanguage]);
+  }, [canSpeak, currentLanguage, pickVoiceForLanguage]);
 
   const processTranscript = useCallback((value: string) => {
     const cleanTranscript = value.trim();
