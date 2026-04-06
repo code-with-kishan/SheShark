@@ -367,7 +367,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </main>
       )}
-      {(isAuthPage || user) && (
+      {(PUBLIC_PATHS.includes(location.pathname) || user) && (
         <div className="fixed right-3 z-50 hidden sm:flex items-end gap-2 sm:right-5 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:bottom-5">
           <div className="glass rounded-2xl sm:rounded-full px-2 sm:px-3 py-2 flex items-center gap-1 sm:gap-2 max-w-[calc(100vw-6rem)] overflow-x-auto">
             <Languages size={14} className="text-slate-500" />
@@ -457,7 +457,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <button
             type="button"
             onClick={() => setIsVoicePanelOpen(false)}
-            className="absolute top-3 right-3 sm:hidden z-10 rounded-lg bg-white/90 p-1.5 text-slate-600 hover:bg-slate-100"
+            className="absolute top-3 right-3 z-10 rounded-lg bg-white/90 p-1.5 text-slate-600 hover:bg-slate-100"
             aria-label="Close voice assistant"
             title="Close"
           >
