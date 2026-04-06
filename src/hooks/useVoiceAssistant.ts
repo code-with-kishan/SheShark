@@ -48,14 +48,14 @@ const conversationPatterns = [
       en: 'Namaste! Hello. I am your SheShark voice assistant. How can I help you today?',
       hi: 'नमस्ते! मैं आपकी SheShark वॉइस असिस्टेंट हूँ। आज मैं आपकी कैसे मदद कर सकती हूँ?',
     },
-    keywords: ['hello', 'hii', 'hi', 'hey', 'namaste', 'namaskar', 'हेलो', 'नमस्ते', 'नमस्कार'],
+    keywords: ['hello', 'hell', 'hii', 'hi', 'hey', 'namaste', 'namastee', 'namaste ji', 'namaskar', 'mnamaste', 'हेलो', 'नमस्ते', 'नमस्कार'],
   },
   {
     response: {
       en: 'I am doing great, thank you for asking. I am ready to help you with any SheShark feature.',
       hi: 'मैं बहुत अच्छी हूँ, पूछने के लिए धन्यवाद। मैं SheShark के किसी भी फीचर में आपकी मदद के लिए तैयार हूँ।',
     },
-    keywords: ['how are you', 'how r u', 'kaise ho', 'kaisi ho', 'aap kaise ho', 'aap kaise hain', 'कैसे हो', 'कैसी हो', 'आप कैसे हो', 'आप कैसे हैं'],
+    keywords: ['how are you', 'how r u', 'how you', 'kaise ho', 'kaisi ho', 'aap kaise ho', 'aap kaise hain', 'aap kese ho', 'app kaise ho', 'kaise ho aap', 'कैसे हो', 'कैसी हो', 'आप कैसे हो', 'आप कैसे हैं'],
   },
   {
     response: {
@@ -63,6 +63,36 @@ const conversationPatterns = [
       hi: 'मैं आपकी वॉइस सपोर्ट, नेविगेशन और SheShark प्लेटफॉर्म गाइडेंस में मदद कर रही हूँ।',
     },
     keywords: ['what are you doing', 'what do you do', 'kya kar rahe ho', 'kya kar raho ho', 'kya kar rahi ho', 'क्या कर रहे हो', 'क्या कर रही हो', 'क्या कर रहे हैं'],
+  },
+  {
+    response: {
+      en: 'To use SheShark, start from the dashboard or voice assistant, then open Marketplace, Safety, Community, Services, or AI Assistant as needed. You can also say commands like "Open marketplace" or "Open safety section".',
+      hi: 'SheShark use karne ke liye dashboard ya voice assistant se start karein. Phir Marketplace, Safety, Community, Services ya AI Assistant khol sakte hain. Aap "marketplace kholo" ya "safety section kholo" jaise commands bhi bol sakte hain.',
+    },
+    keywords: [
+      'how to use',
+      'how do i use',
+      'how to use this app',
+      'how to use this website',
+      'how to use sheshark',
+      'use this app',
+      'use this website',
+      'app kaise use',
+      'app kaise chalaye',
+      'website kaise use',
+      'sheshark kaise use',
+      'sheshark ko kaise chalaye',
+      'kaise istemal kare',
+      'kaise istemal karen',
+      'kaise chale',
+      'kaise chalaye',
+      'is app ko kaise use kare',
+      'ye app kaise use kare',
+      'ye website kaise use kare',
+      'how do i start',
+      'how does it work',
+      'kaise start kare',
+    ],
   },
   {
     response: {
@@ -108,12 +138,17 @@ const commandPatterns = [
     },
     keywords: [
       'open marketplace',
+      'open market place',
       'show products',
       'marketplace',
+      'market place',
       'products',
       'market',
+      'shop',
+      'store',
       'मार्केटप्लेस',
       'मार्केटप्लेस खोलो',
+      'मार्क खोलो',
       'प्रोडक्ट दिखाओ',
     ],
   },
@@ -168,7 +203,7 @@ const commandPatterns = [
       en: 'Opening community.',
       hi: 'मैं कम्युनिटी पेज खोल रही हूँ।',
     },
-    keywords: ['community', 'open community', 'community page', 'कम्युनिटी', 'कम्युनिटी खोलो'],
+    keywords: ['community', 'open community', 'community page', 'open community page', 'कम्युनिटी', 'कम्युनिटी खोलो', 'कम्युनिटी पेज खोलो'],
   },
   {
     route: '/features',
@@ -230,7 +265,21 @@ function detectLanguage(text: string): VoiceLanguage {
   }
 
   const normalized = normalizeText(text);
-  const hindiHints = ['kholo', 'khol', 'suraksha', 'surakshit', 'kripya'];
+  const hindiHints = [
+    'kholo',
+    'khol',
+    'suraksha',
+    'surakshit',
+    'kripya',
+    'namaste',
+    'namaskar',
+    'aap kaise',
+    'app kaise',
+    'kaise ho',
+    'kaisi ho',
+    'marketplace',
+    'community',
+  ];
   if (hindiHints.some((hint) => normalized.includes(hint))) {
     return 'hi';
   }
