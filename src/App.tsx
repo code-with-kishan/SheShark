@@ -105,6 +105,7 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
+          <Link to="/" className="text-slate-600 hover:text-primary font-medium">Home</Link>
           <Link to="/features" className="text-slate-600 hover:text-primary font-medium">Features</Link>
           <Link to="/marketplace" className="text-slate-600 hover:text-primary font-medium">Marketplace</Link>
           <Link to="/community" className="text-slate-600 hover:text-primary font-medium">Community</Link>
@@ -164,6 +165,7 @@ const Navbar = () => {
         {isOpen && (
           <div className="mt-3 rounded-2xl border border-slate-100 bg-white p-3 md:hidden">
             <div className="flex flex-col gap-2 text-sm font-medium text-slate-600">
+              <Link to="/" onClick={() => setIsOpen(false)} className="rounded-xl px-3 py-2 hover:bg-slate-50">Home</Link>
               <Link to="/features" onClick={() => setIsOpen(false)} className="rounded-xl px-3 py-2 hover:bg-slate-50">Features</Link>
               <Link to="/marketplace" onClick={() => setIsOpen(false)} className="rounded-xl px-3 py-2 hover:bg-slate-50">Marketplace</Link>
               <Link to="/community" onClick={() => setIsOpen(false)} className="rounded-xl px-3 py-2 hover:bg-slate-50">Community</Link>

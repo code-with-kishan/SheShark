@@ -426,6 +426,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
       recognitionRef.current.stop();
     }
     setIsListening(false);
+    setIsProcessing(false);
   }, []);
 
   const startListening = useCallback(() => {
@@ -497,6 +498,7 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
         const combinedTranscript = (finalTranscript || interimTranscript).trim();
         if (combinedTranscript) {
           setTranscript(combinedTranscript);
+          latestTranscriptRef.current = combinedTranscript;
 
           if (autoSubmitTimerRef.current) {
             clearTimeout(autoSubmitTimerRef.current);

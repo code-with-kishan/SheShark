@@ -286,7 +286,7 @@ export const PanicButton: React.FC = () => {
     <button
       onClick={triggerPanicAlert}
       disabled={isLoading}
-      className="fixed bottom-6 right-6 w-20 h-20 rounded-full bg-red-600 text-white shadow-2xl hover:bg-red-700 transition transform hover:scale-110 active:scale-95 flex items-center justify-center disabled:opacity-50 z-40"
+      className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-4 sm:left-6 w-20 h-20 rounded-full bg-red-600 text-white shadow-2xl hover:bg-red-700 transition transform hover:scale-110 active:scale-95 flex items-center justify-center disabled:opacity-50 z-[70]"
       title="Emergency Panic Button"
     >
       <div className="text-center">

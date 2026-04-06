@@ -4,13 +4,13 @@ import { Send, Bot, User, Sparkles, Heart, Briefcase, Download, Trash2 } from 'l
 import { useStore } from '@/store/useStore';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
-import { getOfflineAssistantReply, getOfflineWelcomeMessage } from '@/lib/offlineAssistant';
+import { aiService } from '@/services/api';
 
 const AIAssistant = () => {
   const [mode, setMode] = useState<'business' | 'health'>('business');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const { chats, addChatMessage, setChatMessages, clearChatMessages, language, audioEnabled } = useStore();
+  const { chats, addChatMessage, setChatMessages, clearChatMessages, language } = useStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const currentChat = chats[mode] || [];
@@ -19,10 +19,10 @@ const AIAssistant = () => {
     if (currentChat.length === 0) {
       addChatMessage(mode, {
         role: 'model',
-        parts: [{ text: getOfflineWelcomeMessage(language) }],
+        parts: [{ text: mode === 'business' ? 'Welcome to SheShark Business AI. Ask me about growth, sales, operations, and strategy.' : 'Welcome to SheShark Health AI. Ask me about wellness, routines, stress, and healthy habits.' }],
       });
     }
-  }, [addChatMessage, currentChat.length, language, mode]);
+  }, [addChatMessage, currentChat.length, mode]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -40,26 +40,16 @@ const AIAssistant = () => {
     setLoading(true);
 
     try {
-      const reply = await new Promise<string>((resolve) => {
-        setTimeout(() => {
-          resolve(getOfflineAssistantReply(query, mode, language));
-        }, 180);
-      });
+      const response = await aiService.chat(query, mode, language);
+      const reply = response?.data?.text || 'I could not generate a response right now. Please try again.';
 
       const aiMessage = { role: 'model' as const, parts: [{ text: reply }] };
       addChatMessage(mode, aiMessage);
-
-      if (audioEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(reply);
-        utterance.lang = language === 'hi' ? 'hi-IN' : language === 'es' ? 'es-ES' : 'en-US';
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      }
     } catch (error) {
       console.error(error);
       addChatMessage(mode, { 
-        role: 'model', 
-        parts: [{ text: "I'm sorry, I'm having trouble connecting right now. Please try again later." }] 
+        role: 'model',
+        parts: [{ text: "I'm sorry, I couldn't reach the AI service right now. Please check backend/API and try again." }]
       });
     } finally {
       setLoading(false);
@@ -70,7 +60,7 @@ const AIAssistant = () => {
     clearChatMessages(mode);
     addChatMessage(mode, {
       role: 'model',
-      parts: [{ text: getOfflineWelcomeMessage(language) }],
+      parts: [{ text: mode === 'business' ? 'Welcome to SheShark Business AI. Ask me about growth, sales, operations, and strategy.' : 'Welcome to SheShark Health AI. Ask me about wellness, routines, stress, and healthy habits.' }],
     });
   };
 
