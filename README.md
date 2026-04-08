@@ -1023,11 +1023,8 @@ npm run dev
 
 ## 📞 Contact & Support
 
-- 🌐 **Website**: https://sheshark.com
-- 📧 **Email**: hello@sheshark.com
-- 🐦 **Twitter**: @SheSharkApp
-- 💬 **Discord**: [Join Community](https://discord.gg/sheshark)
-- 📱 **WhatsApp**: +1 (555) 123-4567
+- 🌐 **Website**: https://sheshark.vercel.app/)
+- 📧 **Email**: knishad0004@gmail.com
 
 ---
 
