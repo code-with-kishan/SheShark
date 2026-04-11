@@ -339,3 +339,4 @@ export const clearChatHistory = async (req: AuthRequest, res: Response) => {
   }
 };
  
+//this is the helth file for the health and wellness module, it includes the controllers for the health education, mood tracking, and mental health support features.

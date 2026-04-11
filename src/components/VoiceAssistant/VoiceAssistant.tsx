@@ -10,12 +10,14 @@ interface VoiceAssistantProps {
 }
 
 export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommandExecute }) => {
-  const { language } = useStore();
+  const { language, voiceEnabled, audioEnabled, audioVolume, setAudioVolume } = useStore();
   const navigate = useNavigate();
   const initialMode: VoiceLanguageMode = language === 'hi' ? 'hi' : 'auto';
 
   const voiceAssistant = useVoiceAssistant({
     initialLanguageMode: initialMode,
+    speechEnabled: audioEnabled,
+    speechVolume: audioVolume,
     onCommand: (result) => {
       navigate(result.route);
       onCommandExecute?.(result.route);
@@ -101,11 +103,40 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommandExecute
         </div>
       )}
 
+      {!voiceEnabled && (
+        <div className="mb-4 p-3 bg-amber-50 rounded border border-amber-200">
+          <p className="text-sm text-amber-700">Voice commands are turned off. Enable voice to start listening.</p>
+        </div>
+      )}
+
+      {!audioEnabled && (
+        <div className="mb-4 p-3 bg-amber-50 rounded border border-amber-200">
+          <p className="text-sm text-amber-700">Audio is turned off. Enable audio for spoken responses.</p>
+        </div>
+      )}
+
+      <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
+          <span>Voice volume</span>
+          <span>{Math.round(audioVolume * 100)}%</span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={Math.round(audioVolume * 100)}
+          onChange={(event) => setAudioVolume(Number(event.target.value) / 100)}
+          className="w-full accent-pink-500"
+          aria-label="Adjust voice volume"
+        />
+      </div>
+
       {/* Controls */}
       <div className="flex gap-2 mb-4">
         <button
           onClick={voiceAssistant.toggleListening}
-          disabled={!voiceAssistant.isSupported}
+          disabled={!voiceAssistant.isSupported || !voiceEnabled}
           className="flex-1 bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
         >
           <Mic size={16} />
@@ -128,8 +159,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommandExecute
 
       {/* Voice Feedback */}
       <button
-        onClick={() => voiceAssistant.speak(voiceAssistant.response || 'Hello from SheShark')}
-        className="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition flex items-center justify-center gap-2"
+        onClick={() => void voiceAssistant.speak(voiceAssistant.response || 'Hello from SheShark')}
+        disabled={!audioEnabled || !voiceAssistant.canSpeak}
+        className="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 disabled:bg-gray-400 transition flex items-center justify-center gap-2"
       >
         <Volume2 size={16} />
         Speak Response

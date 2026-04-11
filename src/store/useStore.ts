@@ -29,6 +29,8 @@ interface SheSharkState {
   setVoiceEnabled: (enabled: boolean) => void;
   audioEnabled: boolean;
   setAudioEnabled: (enabled: boolean) => void;
+  audioVolume: number;
+  setAudioVolume: (volume: number) => void;
   isVoicePanelOpen: boolean;
   setIsVoicePanelOpen: (open: boolean) => void;
   cart: any[];
@@ -56,6 +58,8 @@ export const useStore = create<SheSharkState>()(
       setVoiceEnabled: (enabled) => set({ voiceEnabled: enabled }),
       audioEnabled: true,
       setAudioEnabled: (enabled) => set({ audioEnabled: enabled }),
+      audioVolume: 1,
+      setAudioVolume: (volume) => set({ audioVolume: Math.min(1, Math.max(0, volume)) }),
       isVoicePanelOpen: false,
       setIsVoicePanelOpen: (open) => set({ isVoicePanelOpen: open }),
       cart: [],
@@ -97,6 +101,7 @@ export const useStore = create<SheSharkState>()(
         language: state.language,
         voiceEnabled: state.voiceEnabled,
         audioEnabled: state.audioEnabled,
+        audioVolume: state.audioVolume,
         isVoicePanelOpen: state.isVoicePanelOpen,
         cart: state.cart,
         chats: state.chats,

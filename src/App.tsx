@@ -223,6 +223,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     voiceEnabled,
     setVoiceEnabled,
     audioEnabled,
+    audioVolume,
     setAudioEnabled,
     isVoicePanelOpen,
     setIsVoicePanelOpen,
@@ -231,6 +232,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const voiceAssistant = useVoiceAssistant({
     initialLanguageMode: language === 'hi' ? 'hi' : 'auto',
     speechEnabled: audioEnabled,
+    speechVolume: audioVolume,
     onCommand: (result) => {
       navigate(result.route);
     },
@@ -424,7 +426,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               <span>{isVoicePanelOpen ? 'Close AI' : 'AI Voice'}</span>
             </button>
             <button
-              onClick={() => voiceAssistant.speak('Audio test successful.')}
+              onClick={() => void voiceAssistant.speak('Audio test successful.')}
               className="p-1 rounded-lg text-slate-600 hover:bg-primary/10"
               aria-label="Test audio"
               title="Test audio"

@@ -42,3 +42,4 @@ if (typeof window !== "undefined" && hasFirebaseConfig && import.meta.env.VITE_F
   console.warn("Firebase env vars are missing. App runs in demo-safe mode.");
 }
  
+//this the fire base file for the health and wellness module, it includes the firebase configuration and initialization for the health education, mood tracking, and mental health support features.

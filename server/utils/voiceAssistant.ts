@@ -15,6 +15,10 @@ export class VoiceAssistant {
 
   constructor(language: 'en' | 'hi' | 'es' = 'en') {
     this.language = language;
+
+    if (typeof window === 'undefined') {
+      return;
+    }
     
     // Check browser support
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -86,6 +90,10 @@ export class VoiceAssistant {
    * Speak text using Web Speech API
    */
   public speak(text: string, onEnd?: () => void): void {
+    if (typeof window === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') {
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
     
     utterance.lang = this.language === 'hi' ? 'hi-IN' : this.language === 'es' ? 'es-ES' : 'en-US';
@@ -96,7 +104,9 @@ export class VoiceAssistant {
       utterance.onend = onEnd;
     }
 
-    window.speechSynthesis.speak(utterance);
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.speak(utterance);
+    }
   }
 
   /**
