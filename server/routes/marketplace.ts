@@ -32,3 +32,4 @@ router.get('/:id/reviews', marketplaceController.getProductReviews);
 router.post('/:id/reviews', marketplaceController.addReview);
 
 export default router;
+ 

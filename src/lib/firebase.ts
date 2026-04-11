@@ -41,3 +41,4 @@ if (typeof window !== "undefined" && hasFirebaseConfig && import.meta.env.VITE_F
 } else if (typeof window !== "undefined" && !hasFirebaseConfig) {
   console.warn("Firebase env vars are missing. App runs in demo-safe mode.");
 }
+ 

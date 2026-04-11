@@ -188,3 +188,4 @@ const Taxi = () => {
 };
 
 export default Taxi;
+ 

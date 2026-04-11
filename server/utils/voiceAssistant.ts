@@ -166,3 +166,4 @@ export class VoiceAssistant {
 
 // Export singleton instance
 export const voiceAssistant = new VoiceAssistant();
+ 

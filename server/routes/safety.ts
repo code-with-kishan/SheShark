@@ -32,3 +32,4 @@ router.get('/emergency-contacts', authMiddleware, requireAuth, safetyController.
 router.put('/emergency-contacts', authMiddleware, requireAuth, safetyController.updateEmergencyContacts);
 
 export default router;
+ 

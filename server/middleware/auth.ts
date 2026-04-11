@@ -123,3 +123,4 @@ export const rateLimit = (maxRequests: number = 100, windowMs: number = 60000) =
     next();
   };
 };
+ 

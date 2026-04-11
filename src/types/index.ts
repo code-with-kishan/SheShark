@@ -282,3 +282,4 @@ export interface StoreType {
   removeFromCart: (id: string) => void;
   clearCart: () => void;
 }
+ 

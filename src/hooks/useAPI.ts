@@ -287,3 +287,4 @@ export const useVoiceCommand = () => {
 
   return { isProcessing, result, error, processCommand };
 };
+ 

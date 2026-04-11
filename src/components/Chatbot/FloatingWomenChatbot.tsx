@@ -134,3 +134,4 @@ const FloatingWomenChatbot = ({ voicePanelOpen = false }: FloatingWomenChatbotPr
 };
 
 export default FloatingWomenChatbot;
+ 

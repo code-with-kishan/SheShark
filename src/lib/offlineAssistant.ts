@@ -224,3 +224,4 @@ export function getOfflineAssistantReply(input: string, mode: AssistantMode, lan
 export function getOfflineWelcomeMessage(language: Language): string {
   return getLanguageText(language, greeting);
 }
+ 

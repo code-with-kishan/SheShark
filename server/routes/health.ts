@@ -28,3 +28,4 @@ router.post('/chat-history', healthController.saveChatHistory);
 router.delete('/chat-history', healthController.clearChatHistory);
 
 export default router;
+ 

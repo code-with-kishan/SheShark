@@ -475,3 +475,4 @@ export const updateEmergencyContacts = async (req: AuthRequest, res: Response) =
     res.status(500).json({ error: 'Failed to update emergency contacts' });
   }
 };
+ 
